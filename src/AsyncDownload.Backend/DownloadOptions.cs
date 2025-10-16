@@ -1,5 +1,8 @@
 ﻿namespace AsyncDownload.Backend;
 
+/// <summary>
+/// Options for downloading files.
+/// </summary>
 public class DownloadOptions
 {
     /// <summary>

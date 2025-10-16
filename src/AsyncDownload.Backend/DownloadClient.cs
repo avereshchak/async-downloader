@@ -5,11 +5,21 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AsyncDownload.Backend;
 
+/// <summary>
+/// A client for scheduling and managing download jobs.
+/// </summary>
+/// <remarks>Use it in case you don't want adding the services
+/// into your DI container.</remarks>
 public class DownloadClient : IDisposable, IDownloadManager
 {
     private readonly ServiceProvider serviceProvider;
     private readonly IDownloadManager manager;
 
+    /// <summary>
+    /// Initializes download services with a specified
+    /// maximum number of concurrent downloads.
+    /// </summary>
+    /// <param name="maxConcurrentDownloads"></param>
     public DownloadClient(int maxConcurrentDownloads)
     {
         var container = new ServiceCollection();
@@ -24,16 +34,25 @@ public class DownloadClient : IDisposable, IDownloadManager
         serviceProvider.Dispose();
     }
 
+    /// <summary>
+    /// Request a new download job.
+    /// </summary>
     public async Task ScheduleDownloadAsync(string url, string filePath, CancellationToken ct)
     {
         await manager.ScheduleDownloadAsync(url, filePath, ct).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Get all download requests.
+    /// </summary>
     public async Task<IEnumerable<IJob>> GetAllJobsAsync()
     {
         return await manager.GetAllJobsAsync().ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Waits until all download jobs are completed or the timeout is reached.
+    /// </summary>
     public async Task WaitForCompletionAsync(TimeSpan timeout)
     {
         var stopwatch = Stopwatch.StartNew();
