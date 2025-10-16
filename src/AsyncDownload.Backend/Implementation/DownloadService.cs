@@ -23,7 +23,7 @@ internal class DownloadService : IDownloadService
         logger.CreateHttpClient(jobId, url);
         var httpClient = httpClientFactory.CreateClient();
         
-        // TODO: retry policy
+        // TODO: retry policy using Microsoft.Extensions.Http.Polly?
         var response = await httpClient.GetAsync(url, ct);
         response.EnsureSuccessStatusCode();
 
