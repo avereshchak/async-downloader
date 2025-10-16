@@ -44,7 +44,6 @@ public sealed class JobDispatcherTests
         A.CallTo(() => options.Value).Returns(new DownloadOptions
         {
             MaxConcurrentDownloads = maxConcurrentDownloads,
-            StopToken = cts.Token
         });
         return new JobDispatcher(options, store, logger, downloadService, fileSystem, queue);
     }
@@ -87,7 +86,7 @@ public sealed class JobDispatcherTests
         
         var job = A.Fake<IJob>();
 
-        A.CallTo(() => queue.DequeueAsync()).Returns(job);
+        A.CallTo(() => queue.DequeueAsync(A<CancellationToken>._)).Returns(job);
         A.CallTo(() => downloadService.DownloadAsync(job.Id, job.Url, A<CancellationToken>.Ignored))
             .Invokes(() =>
             {

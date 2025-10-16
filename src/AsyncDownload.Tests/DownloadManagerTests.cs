@@ -11,6 +11,7 @@ public class DownloadManagerTests
     private DownloadManager sut;
     private IJobStore store;
     private IDownloadQueue queue;
+    private CancellationToken ct = CancellationToken.None;
 #pragma warning restore CS8618
 
     [TestInitialize]
@@ -24,7 +25,7 @@ public class DownloadManagerTests
     [TestMethod]
     public async Task ScheduleDownloadAsync_ValidParameters_JobQueued()
     {
-        await sut.ScheduleDownloadAsync("http://localhost/file.html", "file.html");
+        await sut.ScheduleDownloadAsync("http://localhost/file.html", "file.html", ct);
 
         A.CallTo(() => store.AddDownloadJobAsync("http://localhost/file.html", "file.html"))
             .MustHaveHappenedOnceExactly();
@@ -35,7 +36,7 @@ public class DownloadManagerTests
     {
         await Assert.ThrowsExceptionAsync<ArgumentException>(async () =>
         {
-            await sut.ScheduleDownloadAsync("invalid-url", "file.html");
+            await sut.ScheduleDownloadAsync("invalid-url", "file.html", ct);
         });
     }
 
@@ -44,7 +45,7 @@ public class DownloadManagerTests
     {
         await Assert.ThrowsExceptionAsync<ArgumentException>(async () =>
         {
-            await sut.ScheduleDownloadAsync("http://localhost/file.html", "");
+            await sut.ScheduleDownloadAsync("http://localhost/file.html", "", ct);
         });
     }
 

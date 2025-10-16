@@ -8,7 +8,7 @@ public interface IDownloadManager
     /// <summary>
     /// Request a new download job.
     /// </summary>
-    Task ScheduleDownloadAsync(string url, string filePath);
+    Task ScheduleDownloadAsync(string url, string filePath, CancellationToken ct);
 
     /// <summary>
     /// Get all download requests.

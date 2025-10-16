@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace AsyncDownload.Backend.Implementation;
 
-internal class JobDispatcher
+internal class JobDispatcher : IDisposable
 {
     private readonly ILogger<JobDispatcher> logger;
     private readonly IDownloadService downloadService;
@@ -13,7 +13,7 @@ internal class JobDispatcher
     private readonly IJobStore store;
     private readonly IDownloadQueue queue;
     private readonly SemaphoreSlim semaphore;
-    private readonly CancellationToken ct;
+    private readonly CancellationTokenSource cts;
 
     public JobDispatcher(
         IOptions<DownloadOptions> options,
@@ -30,9 +30,8 @@ internal class JobDispatcher
             throw new ArgumentOutOfRangeException(nameof(maxConcurrentJobs), "Must be positive.");
         }
 
-        ct = options.Value.StopToken;
-
         semaphore = new SemaphoreSlim(maxConcurrentJobs, maxConcurrentJobs);
+        cts = new CancellationTokenSource();
 
         this.store = store;
         this.logger = logger;
@@ -46,32 +45,38 @@ internal class JobDispatcher
         logger.StartingJobDispatcher(maxConcurrentJobs);
     }
 
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
+
     private async Task ProducerFunc()
     {
         logger.JobDispatcherProducerThreadStarted();
 
         try
         {
-            while (!ct.IsCancellationRequested)
+            while (!cts.Token.IsCancellationRequested)
             {
                 logger.WaitingForJob();
-                var job = await queue.DequeueAsync();
+                var job = await queue.DequeueAsync(cts.Token);
 
                 // Do not spawn more download tasks than configured.
                 logger.WaitForAvailableJobSlot(job.Id, job.Url);
-                await semaphore.WaitAsync(ct);
+                await semaphore.WaitAsync(cts.Token);
 
                 logger.AcquiredTheJobSlot(job.Id, job.Url);
 
                 _ = Task.Run(() =>
                 {
-                    return RunJobAsync(job)
+                    return RunJobAsync(job, cts.Token)
                         .ContinueWith(_ =>
                         {
                             logger.ReleasingJobSlot(job.Id, job.Url);
                             semaphore.Release();
-                        }, ct);
-                }, ct);
+                        }, cts.Token);
+                }, cts.Token);
             }
             logger.StoppingJobDispatcher();
         }
@@ -87,7 +92,7 @@ internal class JobDispatcher
         }
     }
 
-    private async Task RunJobAsync(IJob job)
+    private async Task RunJobAsync(IJob job, CancellationToken ct)
     {
         try
         {

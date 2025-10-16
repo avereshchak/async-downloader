@@ -13,7 +13,7 @@ internal class DownloadManager : IDownloadManager
         this.queue = queue;
     }
 
-    public async Task ScheduleDownloadAsync(string url, string filePath)
+    public async Task ScheduleDownloadAsync(string url, string filePath, CancellationToken ct)
     {
         if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
         {
@@ -27,7 +27,7 @@ internal class DownloadManager : IDownloadManager
         }
 
         var job = await store.AddDownloadJobAsync(url, filePath);
-        await queue.EnqueueAsync(job);
+        await queue.EnqueueAsync(job, ct);
     }
 
     public Task<IEnumerable<IJob>> GetAllJobsAsync()

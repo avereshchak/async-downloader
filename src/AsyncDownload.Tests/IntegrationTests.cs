@@ -24,7 +24,7 @@ public class IntegrationTests
             var link = $"http://localhost:5000/download/{i}";
             var filePath = Path.Combine(downloadsFolder, $"{i}.txt");
 
-            await downloadClient.ScheduleDownloadAsync(link, filePath);
+            await downloadClient.ScheduleDownloadAsync(link, filePath, CancellationToken.None);
         }
 
         // Let the download manager do its work.

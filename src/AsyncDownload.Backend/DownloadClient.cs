@@ -7,15 +7,13 @@ namespace AsyncDownload.Backend;
 
 public class DownloadClient : IDisposable, IDownloadManager
 {
-    private readonly CancellationTokenSource cts;
     private readonly ServiceProvider serviceProvider;
     private readonly IDownloadManager manager;
 
     public DownloadClient(int maxConcurrentDownloads)
     {
-        cts = new CancellationTokenSource();
         var container = new ServiceCollection();
-        container.AddAsyncDownload(maxConcurrentDownloads, cts.Token);
+        container.AddAsyncDownload(maxConcurrentDownloads);
         serviceProvider = container.BuildServiceProvider();
         serviceProvider.ActivateAsyncDownload();
         manager = serviceProvider.GetRequiredService<IDownloadManager>();
@@ -23,13 +21,12 @@ public class DownloadClient : IDisposable, IDownloadManager
 
     public void Dispose()
     {
-        cts.Cancel();
         serviceProvider.Dispose();
     }
 
-    public Task ScheduleDownloadAsync(string url, string filePath)
+    public Task ScheduleDownloadAsync(string url, string filePath, CancellationToken ct)
     {
-        return manager.ScheduleDownloadAsync(url, filePath);
+        return manager.ScheduleDownloadAsync(url, filePath, ct);
     }
 
     public Task<IEnumerable<IJob>> GetAllJobsAsync()
