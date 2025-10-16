@@ -8,7 +8,7 @@ public class DownloadOptions
     public int MaxConcurrentDownloads { get; set; } = 3;
 
     /// <summary>
-    /// Allows the downloader to stop gracefully when the application is stopping.
+    /// Allows the download to stop gracefully when the application is stopping.
     /// </summary>
     public CancellationToken StopToken { get; set; } = CancellationToken.None;
 }

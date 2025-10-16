@@ -14,7 +14,8 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddAsyncDownload(
         this IServiceCollection services,
-        int maxConcurrentDownloads)
+        int maxConcurrentDownloads,
+        CancellationToken stopToken)
     {
         services.AddSingleton<IDownloadManager, DownloadManager>();
         services.AddSingleton<IJobStore, JobStore>();
@@ -24,8 +25,10 @@ public static class ServiceCollectionExtensions
         services.Configure<DownloadOptions>(options =>
         {
             options.MaxConcurrentDownloads = maxConcurrentDownloads;
+            options.StopToken = stopToken;
         });
 
+        services.AddLogging();
         return services;
     }
 }
