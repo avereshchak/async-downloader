@@ -10,17 +10,19 @@ namespace AsyncDownload.Backend.Implementation;
 internal class DownloadService : IDownloadService
 {
     private readonly ILogger<DownloadService> logger;
+    private readonly IHttpClientFactory httpClientFactory;
 
-    public DownloadService(ILogger<DownloadService> logger)
+    public DownloadService(ILogger<DownloadService> logger, IHttpClientFactory httpClientFactory)
     {
         this.logger = logger;
+        this.httpClientFactory = httpClientFactory;
     }
 
     public async Task<Stream> DownloadAsync(Guid jobId, string url, CancellationToken ct)
     {
         logger.CreateHttpClient(jobId, url);
-        using var httpClient = new HttpClient();
-
+        var httpClient = httpClientFactory.CreateClient();
+        
         // TODO: retry policy
         var response = await httpClient.GetAsync(url, ct);
         response.EnsureSuccessStatusCode();

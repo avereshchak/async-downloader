@@ -17,6 +17,7 @@ public static class ServiceCollectionExtensions
         int maxConcurrentDownloads,
         CancellationToken stopToken)
     {
+        services.AddHttpClient();
         services.AddSingleton<IDownloadManager, DownloadManager>();
         services.AddSingleton<IJobStore, JobStore>();
         services.AddSingleton<JobDispatcher>();
