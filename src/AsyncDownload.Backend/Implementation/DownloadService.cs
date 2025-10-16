@@ -24,9 +24,9 @@ internal class DownloadService : IDownloadService
         var httpClient = httpClientFactory.CreateClient();
         
         // TODO: retry policy using Microsoft.Extensions.Http.Polly?
-        var response = await httpClient.GetAsync(url, ct);
+        var response = await httpClient.GetAsync(url, ct).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadAsStreamAsync(ct);
+        return await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
     }
 }

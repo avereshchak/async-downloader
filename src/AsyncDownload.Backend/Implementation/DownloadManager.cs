@@ -26,12 +26,12 @@ internal class DownloadManager : IDownloadManager
             throw new ArgumentException("The provided file path is not valid.", nameof(filePath));
         }
 
-        var job = await store.AddDownloadJobAsync(url, filePath);
-        await queue.EnqueueAsync(job, ct);
+        var job = await store.AddDownloadJobAsync(url, filePath).ConfigureAwait(false);
+        await queue.EnqueueAsync(job, ct).ConfigureAwait(false);
     }
 
-    public Task<IEnumerable<IJob>> GetAllJobsAsync()
+    public async Task<IEnumerable<IJob>> GetAllJobsAsync()
     {
-        return store.GetAllAsync();
+        return await store.GetAllAsync().ConfigureAwait(false);
     }
 }

@@ -60,11 +60,11 @@ internal class JobDispatcher : IDisposable
             while (!cts.Token.IsCancellationRequested)
             {
                 logger.WaitingForJob();
-                var job = await queue.DequeueAsync(cts.Token);
+                var job = await queue.DequeueAsync(cts.Token).ConfigureAwait(false);
 
                 // Do not spawn more download tasks than configured.
                 logger.WaitForAvailableJobSlot(job.Id, job.Url);
-                await semaphore.WaitAsync(cts.Token);
+                await semaphore.WaitAsync(cts.Token).ConfigureAwait(false);
 
                 logger.AcquiredTheJobSlot(job.Id, job.Url);
 
@@ -97,18 +97,20 @@ internal class JobDispatcher : IDisposable
         try
         {
             logger.StartingJob(job.Id, job.Url);
-            await store.MarkAsStarted(job.Id);
+            await store.MarkAsStarted(job.Id).ConfigureAwait(false);
 
             await using var stream = await downloadService.DownloadAsync(job.Id, job.Url, ct);
-            await fileSystem.SaveToFileAsync(stream, job.Id, job.FilePath, ct);
             
-            await store.MarkAsCompletedAsync(job.Id);
+            await fileSystem.SaveToFileAsync(stream, job.Id, job.FilePath, ct)
+                .ConfigureAwait(false);
+            
+            await store.MarkAsCompletedAsync(job.Id).ConfigureAwait(false);
             logger.JobCompleted(job.Id, job.Url);
         }
         catch (Exception ex)
         {
             logger.JobFailed(ex, job.Id, job.Url);
-            await store.MarkAsFailed(job.Id, ex.Message);
+            await store.MarkAsFailed(job.Id, ex.Message).ConfigureAwait(false);
         }
     }
 }

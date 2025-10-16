@@ -24,21 +24,21 @@ public class DownloadClient : IDisposable, IDownloadManager
         serviceProvider.Dispose();
     }
 
-    public Task ScheduleDownloadAsync(string url, string filePath, CancellationToken ct)
+    public async Task ScheduleDownloadAsync(string url, string filePath, CancellationToken ct)
     {
-        return manager.ScheduleDownloadAsync(url, filePath, ct);
+        await manager.ScheduleDownloadAsync(url, filePath, ct).ConfigureAwait(false);
     }
 
-    public Task<IEnumerable<IJob>> GetAllJobsAsync()
+    public async Task<IEnumerable<IJob>> GetAllJobsAsync()
     {
-        return manager.GetAllJobsAsync();
+        return await manager.GetAllJobsAsync().ConfigureAwait(false);
     }
 
     public async Task WaitForCompletionAsync(TimeSpan timeout)
     {
         var stopwatch = Stopwatch.StartNew();
 
-        var jobs = await GetAllJobsAsync();
+        var jobs = await GetAllJobsAsync().ConfigureAwait(false);
         var enumerable = jobs.ToList();
         while (stopwatch.Elapsed < timeout)
         {
@@ -47,7 +47,7 @@ public class DownloadClient : IDisposable, IDownloadManager
                 return;
             }
 
-            await Task.Delay(100);
+            await Task.Delay(100).ConfigureAwait(false);
         }
     }
 }

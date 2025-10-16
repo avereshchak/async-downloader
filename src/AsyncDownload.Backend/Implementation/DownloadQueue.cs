@@ -14,12 +14,12 @@ internal class DownloadQueue : IDownloadQueue
 
     public async Task EnqueueAsync(IJob job, CancellationToken ct)
     {
-        await queue.Writer.WriteAsync(job, ct);
+        await queue.Writer.WriteAsync(job, ct).ConfigureAwait(false);
     }
 
     public async Task<IJob> DequeueAsync(CancellationToken ct)
     {
         // Wait until a job is available or cancellation is requested.
-        return await queue.Reader.ReadAsync(ct);
+        return await queue.Reader.ReadAsync(ct).ConfigureAwait(false);
     }
 }

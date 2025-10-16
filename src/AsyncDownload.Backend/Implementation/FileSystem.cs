@@ -27,7 +27,7 @@ internal class FileSystem : IFileSystem
             FileAccess.Write,
             FileShare.None);
 
-        await content.CopyToAsync(fileStream, ct);
+        await content.CopyToAsync(fileStream, ct).ConfigureAwait(false);
 
         logger.ResponseSuccessfullyWrittenToFile(jobId, filePath);
     }
