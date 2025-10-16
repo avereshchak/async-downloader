@@ -5,14 +5,19 @@ using Microsoft.Extensions.Options;
 
 namespace AsyncDownload.Backend.Implementation;
 
+/// <summary>
+/// A simple service for downloading given URLs to specified file paths.
+/// </summary>
 internal class DownloadService : IJobProcessor
 {
     private readonly CancellationToken ct;
     private readonly ILogger<DownloadService> logger;
 
-    public DownloadService(IOptions<DownloadOptions> options, ILogger<DownloadService> logger)
+    public DownloadService(
+        IOptions<DownloadOptions> options, 
+        ILogger<DownloadService> logger)
     {
-        ct = options.Value.AppStoppingToken;
+        ct = options.Value.StopToken;
         this.logger = logger;
     }
 
@@ -20,6 +25,7 @@ internal class DownloadService : IJobProcessor
     {
         logger.CreateHttpClient(job.Id, job.Url);
         
+        // Theoretically, this service can be split into separate services.
         using var httpClient = new HttpClient();
         var response = await httpClient.GetAsync(job.Url, ct);
         response.EnsureSuccessStatusCode();

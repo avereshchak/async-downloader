@@ -1,7 +1,7 @@
 ﻿namespace AsyncDownload.Backend.Interfaces;
 
 /// <summary>
-/// Allows scheduling new downloads and to see their status.
+/// Allows scheduling new downloads and monitoring their status.
 /// </summary>
 public interface IDownloadManager
 {

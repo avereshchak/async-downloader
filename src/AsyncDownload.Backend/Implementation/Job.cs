@@ -8,7 +8,7 @@ internal class Job : IJob
     public DateTimeOffset Timestamp { get; set; }
     public string Url { get; }
     public string FilePath { get; }
-    public DownloadJobStatus Status { get; set; }
+    public DownloadStatus Status { get; set; }
     public string? StatusMessage { get; set; }
 
     public Job(string url, string filePath)

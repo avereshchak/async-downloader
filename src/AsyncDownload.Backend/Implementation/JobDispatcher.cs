@@ -26,7 +26,7 @@ internal class JobDispatcher
             throw new ArgumentOutOfRangeException(nameof(maxConcurrentJobs), "Must be positive.");
         }
 
-        ct = options.Value.AppStoppingToken;
+        ct = options.Value.StopToken;
 
         semaphore = new SemaphoreSlim(maxConcurrentJobs, maxConcurrentJobs);
 
@@ -34,6 +34,8 @@ internal class JobDispatcher
         this.logger = logger;
         this.jobProcessor = jobProcessor;
 
+        // Create a long-running task which monitors the incoming download requests
+        // and spawns download tasks as needed.
         Task.Factory.StartNew(ProducerFunc, TaskCreationOptions.LongRunning);
         logger.StartingJobDispatcher(maxConcurrentJobs);
     }
@@ -46,14 +48,11 @@ internal class JobDispatcher
         {
             while (!ct.IsCancellationRequested)
             {
-                logger.CheckJobQueue();
-
                 logger.WaitingForJob();
                 var job = await store.DequeueAsync();
 
-                logger.WaitForAvailableJobSlot(job.Id, job.Url);
-
                 // Do not spawn more download tasks than configured.
+                logger.WaitForAvailableJobSlot(job.Id, job.Url);
                 await semaphore.WaitAsync(ct);
 
                 logger.AcquiredTheJobSlot(job.Id, job.Url);

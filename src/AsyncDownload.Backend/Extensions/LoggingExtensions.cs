@@ -10,9 +10,6 @@ internal static partial class LoggingExtensions
     [LoggerMessage(2, LogLevel.Debug, "Job Dispatcher producer thread started.")]
     public static partial void JobDispatcherProducerThreadStarted(this ILogger logger);
     
-    [LoggerMessage(3, LogLevel.Debug, "Checking job queue for new jobs...")]
-    public static partial void CheckJobQueue(this ILogger logger);
-    
     [LoggerMessage(4, LogLevel.Debug, "Waiting for a new job...")]
     public static partial void WaitingForJob(this ILogger logger);
     
@@ -34,7 +31,7 @@ internal static partial class LoggingExtensions
     [LoggerMessage(10, LogLevel.Debug, "Starting downloading from {Url}. Job {JobId}")]
     public static partial void StartingJob(this ILogger logger, Guid jobId, string url);
 
-    [LoggerMessage(11, LogLevel.Debug, "Downloading {Url} completed successfully. Job {JobId}.")]
+    [LoggerMessage(11, LogLevel.Information, "Downloading {Url} completed successfully. Job {JobId}.")]
     public static partial void JobCompleted(this ILogger logger, Guid jobId, string url);
 
     [LoggerMessage(12, LogLevel.Error, "Downloading {Url} failed. Job {JobId}.")]

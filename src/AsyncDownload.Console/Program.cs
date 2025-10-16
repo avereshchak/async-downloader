@@ -18,7 +18,8 @@ internal class Program
             {
                 // Add the AsyncDownload services to the DI container.
                 // Tell it to perform a maximum of 3 concurrent downloads.
-                services.AddAsyncDownload(maxConcurrentDownloads: 3);
+                services.AddAsyncDownload(
+                    maxConcurrentDownloads: 3);
               
                 services.AddLogging(logging =>
                 {
@@ -48,7 +49,15 @@ internal class Program
         var jobs = await downloadManager.GetAllJobsAsync();
         foreach (var job in jobs)
         {
-            System.Console.WriteLine($"Status of {job.Url} is {job.Status}.");
+            System.Console.Write($"Status of {job.Url} is {job.Status}.");
+            if (!string.IsNullOrEmpty(job.StatusMessage))
+            {
+                System.Console.WriteLine($" {job.StatusMessage}");
+            }
+            else
+            {
+                System.Console.WriteLine();
+            }
         }
     }
 

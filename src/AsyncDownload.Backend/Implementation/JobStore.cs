@@ -5,6 +5,9 @@ using Microsoft.Extensions.Options;
 
 namespace AsyncDownload.Backend.Implementation;
 
+/// <summary>
+/// In-memory job store and queue. Not production ready, sorry.
+/// </summary>
 internal class JobStore : IJobStore
 {
     private readonly ConcurrentDictionary<Guid, Job> jobs;
@@ -15,7 +18,7 @@ internal class JobStore : IJobStore
     {
         jobs = new ConcurrentDictionary<Guid, Job>();
         jobQueue = Channel.CreateUnbounded<IJob>();
-        ct = options.Value.AppStoppingToken;
+        ct = options.Value.StopToken;
     }
 
     public Task<IEnumerable<IJob>> GetAllAsync()
@@ -25,6 +28,7 @@ internal class JobStore : IJobStore
 
     public async Task<IJob> DequeueAsync()
     {
+        // Wait until a job is available or cancellation is requested.
         return await jobQueue.Reader.ReadAsync(ct);
     }
 
@@ -33,11 +37,12 @@ internal class JobStore : IJobStore
         // Register a new job.
         var job = new Job(url, filePath)
         {
-            Status = DownloadJobStatus.Queued
+            Status = DownloadStatus.Queued
         };
 
         jobs[job.Id] = job;
 
+        // Enqueue the job for processing.
         await jobQueue.Writer.WriteAsync(job, ct);
     }
 
@@ -49,13 +54,13 @@ internal class JobStore : IJobStore
             return Task.FromResult(false);
         }
 
-        if (job.Status != DownloadJobStatus.Queued)
+        if (job.Status != DownloadStatus.Queued)
         {
             // Unexpected status. It might have been already started, completed or canceled.
             return Task.FromResult(false);
         }
 
-        job.Status = DownloadJobStatus.InProgress;
+        job.Status = DownloadStatus.InProgress;
         job.Timestamp = DateTimeOffset.UtcNow;
 
         return Task.FromResult(true);
@@ -65,7 +70,7 @@ internal class JobStore : IJobStore
     {
         if (jobs.TryGetValue(jobId, out var job))
         {
-            job.Status = DownloadJobStatus.DownloadedSuccessfully;
+            job.Status = DownloadStatus.DownloadedSuccessfully;
             job.Timestamp = DateTimeOffset.UtcNow;
         }
         return Task.CompletedTask;
@@ -75,7 +80,7 @@ internal class JobStore : IJobStore
     {
         if (jobs.TryGetValue(jobId, out var job))
         {
-            job.Status = DownloadJobStatus.DownloadFailed;
+            job.Status = DownloadStatus.DownloadFailed;
             job.StatusMessage = statusMessage;
             job.Timestamp = DateTimeOffset.UtcNow;
         }

@@ -18,7 +18,7 @@ internal class DownloadManager : IDownloadManager
             throw new ArgumentException("The provided URL is not valid.", nameof(url));
         }
 
-        // Validate file path (basic check)
+        // Validate file path (basic check).
         if (string.IsNullOrWhiteSpace(filePath))
         {
             throw new ArgumentException("The provided file path is not valid.", nameof(filePath));

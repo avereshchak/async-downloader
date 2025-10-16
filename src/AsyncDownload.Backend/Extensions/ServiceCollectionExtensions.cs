@@ -4,14 +4,16 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AsyncDownload.Backend.Extensions;
 
+/// <summary>
+/// Extension methods for IServiceCollection to add AsyncDownload services.
+/// </summary>
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddAsyncDownload(this IServiceCollection services)
-    {
-        return services.AddAsyncDownload(maxConcurrentDownloads: 3);
-    }
-
-    public static IServiceCollection AddAsyncDownload(this IServiceCollection services,
+    /// <summary>
+    /// Adds AsyncDownload services to the IServiceCollection with specified max concurrent downloads.
+    /// </summary>
+    public static IServiceCollection AddAsyncDownload(
+        this IServiceCollection services,
         int maxConcurrentDownloads)
     {
         services.AddSingleton<IDownloadManager, DownloadManager>();

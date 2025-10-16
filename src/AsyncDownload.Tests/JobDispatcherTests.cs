@@ -40,7 +40,7 @@ public sealed class JobDispatcherTests
         A.CallTo(() => options.Value).Returns(new DownloadOptions
         {
             MaxConcurrentDownloads = maxConcurrentDownloads,
-            AppStoppingToken = cts.Token
+            StopToken = cts.Token
         });
         return new JobDispatcher(options, store, logger, processor);
     }

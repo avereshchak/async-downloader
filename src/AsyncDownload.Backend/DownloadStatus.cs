@@ -1,6 +1,9 @@
 ﻿namespace AsyncDownload.Backend;
 
-public enum DownloadJobStatus
+/// <summary>
+/// Download job statuses.
+/// </summary>
+public enum DownloadStatus
 {
     Queued,
     InProgress,
