@@ -1,7 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using System.Threading.Channels;
 using AsyncDownload.Backend.Interfaces;
-using Microsoft.Extensions.Options;
 
 namespace AsyncDownload.Backend.Implementation;
 
@@ -11,14 +9,10 @@ namespace AsyncDownload.Backend.Implementation;
 internal class JobStore : IJobStore
 {
     private readonly ConcurrentDictionary<Guid, Job> jobs;
-    private readonly Channel<IJob> jobQueue;
-    private readonly CancellationToken ct;
 
-    public JobStore(IOptions<DownloadOptions> options)
+    public JobStore()
     {
         jobs = new ConcurrentDictionary<Guid, Job>();
-        jobQueue = Channel.CreateUnbounded<IJob>();
-        ct = options.Value.StopToken;
     }
 
     public Task<IEnumerable<IJob>> GetAllAsync()
@@ -26,13 +20,7 @@ internal class JobStore : IJobStore
         return Task.FromResult(jobs.Values.Cast<IJob>());
     }
 
-    public async Task<IJob> DequeueAsync()
-    {
-        // Wait until a job is available or cancellation is requested.
-        return await jobQueue.Reader.ReadAsync(ct);
-    }
-
-    public async Task EnqueueDownloadAsync(string url, string filePath)
+    public Task<IJob> AddDownloadJobAsync(string url, string filePath)
     {
         // Register a new job.
         var job = new Job(url, filePath)
@@ -41,9 +29,7 @@ internal class JobStore : IJobStore
         };
 
         jobs[job.Id] = job;
-
-        // Enqueue the job for processing.
-        await jobQueue.Writer.WriteAsync(job, ct);
+        return Task.FromResult(job as IJob);
     }
 
     public Task<bool> MarkAsStarted(Guid jobId)

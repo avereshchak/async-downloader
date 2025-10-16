@@ -10,13 +10,15 @@ public class DownloadManagerTests
 #pragma warning disable CS8618 
     private DownloadManager sut;
     private IJobStore store;
+    private IDownloadQueue queue;
 #pragma warning restore CS8618
 
     [TestInitialize]
     public void Setup()
     {
         store = A.Fake<IJobStore>();
-        sut = new DownloadManager(store);
+        queue = A.Fake<IDownloadQueue>();
+        sut = new DownloadManager(store, queue);
     }
 
     [TestMethod]
@@ -24,7 +26,7 @@ public class DownloadManagerTests
     {
         await sut.ScheduleDownloadAsync("http://localhost/file.html", "file.html");
 
-        A.CallTo(() => store.EnqueueDownloadAsync("http://localhost/file.html", "file.html"))
+        A.CallTo(() => store.AddDownloadJobAsync("http://localhost/file.html", "file.html"))
             .MustHaveHappenedOnceExactly();
     }
 

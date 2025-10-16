@@ -11,6 +11,7 @@ internal class JobDispatcher
     private readonly IDownloadService downloadService;
     private readonly IFileSystem fileSystem;
     private readonly IJobStore store;
+    private readonly IDownloadQueue queue;
     private readonly SemaphoreSlim semaphore;
     private readonly CancellationToken ct;
 
@@ -19,7 +20,8 @@ internal class JobDispatcher
         IJobStore store,
         ILogger<JobDispatcher> logger,
         IDownloadService downloadService,
-        IFileSystem fileSystem)
+        IFileSystem fileSystem,
+        IDownloadQueue queue)
     {
         var maxConcurrentJobs = options.Value.MaxConcurrentDownloads;
 
@@ -36,6 +38,7 @@ internal class JobDispatcher
         this.logger = logger;
         this.downloadService = downloadService;
         this.fileSystem = fileSystem;
+        this.queue = queue;
 
         // Create a long-running task which monitors the incoming download requests
         // and spawns download tasks as needed.
@@ -52,7 +55,7 @@ internal class JobDispatcher
             while (!ct.IsCancellationRequested)
             {
                 logger.WaitingForJob();
-                var job = await store.DequeueAsync();
+                var job = await queue.DequeueAsync();
 
                 // Do not spawn more download tasks than configured.
                 logger.WaitForAvailableJobSlot(job.Id, job.Url);

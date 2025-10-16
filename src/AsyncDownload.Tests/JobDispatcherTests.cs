@@ -16,6 +16,7 @@ public sealed class JobDispatcherTests
     private ILogger<JobDispatcher> logger;
     private IDownloadService downloadService;
     private IFileSystem fileSystem;
+    private IDownloadQueue queue;
 #pragma warning restore CS8618
 
     [TestInitialize]
@@ -25,6 +26,7 @@ public sealed class JobDispatcherTests
         logger = A.Fake<ILogger<JobDispatcher>>();
         downloadService = A.Fake<IDownloadService>();
         fileSystem = A.Fake<IFileSystem>();
+        queue = A.Fake<IDownloadQueue>();
 
         cts = new CancellationTokenSource();
     }
@@ -44,7 +46,7 @@ public sealed class JobDispatcherTests
             MaxConcurrentDownloads = maxConcurrentDownloads,
             StopToken = cts.Token
         });
-        return new JobDispatcher(options, store, logger, downloadService, fileSystem);
+        return new JobDispatcher(options, store, logger, downloadService, fileSystem, queue);
     }
 
     [TestMethod]
@@ -85,7 +87,7 @@ public sealed class JobDispatcherTests
         
         var job = A.Fake<IJob>();
 
-        A.CallTo(() => store.DequeueAsync()).Returns(job);
+        A.CallTo(() => queue.DequeueAsync()).Returns(job);
         A.CallTo(() => downloadService.DownloadAsync(job.Id, job.Url, A<CancellationToken>.Ignored))
             .Invokes(() =>
             {

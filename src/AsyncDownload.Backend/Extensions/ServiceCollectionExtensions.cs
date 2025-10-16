@@ -20,8 +20,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IDownloadManager, DownloadManager>();
         services.AddSingleton<IJobStore, JobStore>();
         services.AddSingleton<JobDispatcher>();
-        services.AddTransient<IDownloadService, DownloadService>();
-        services.AddTransient<IFileSystem, FileSystem>();
+        services.AddSingleton<IDownloadService, DownloadService>();
+        services.AddSingleton<IFileSystem, FileSystem>();
+        services.AddSingleton<IDownloadQueue, DownloadQueue>();
         services.Configure<DownloadOptions>(options =>
         {
             options.MaxConcurrentDownloads = maxConcurrentDownloads;

@@ -12,14 +12,9 @@ internal interface IJobStore
     Task<IEnumerable<IJob>> GetAllAsync();
 
     /// <summary>
-    /// Dequeues the next job to be processed.
-    /// </summary>
-    Task<IJob> DequeueAsync();
-
-    /// <summary>
     /// Enqueues a new download job.
     /// </summary>
-    Task EnqueueDownloadAsync(string url, string filePath);
+    Task<IJob> AddDownloadJobAsync(string url, string filePath);
 
     /// <summary>
     /// Changes the status of a job to InProgress.
