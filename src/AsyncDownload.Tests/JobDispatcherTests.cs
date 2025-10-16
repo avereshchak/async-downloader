@@ -14,7 +14,8 @@ public sealed class JobDispatcherTests
     private CancellationTokenSource cts;
     private IJobStore store;
     private ILogger<JobDispatcher> logger;
-    private IJobProcessor processor;
+    private IDownloadService downloadService;
+    private IFileSystem fileSystem;
 #pragma warning restore CS8618
 
     [TestInitialize]
@@ -22,7 +23,8 @@ public sealed class JobDispatcherTests
     {
         store = A.Fake<IJobStore>();
         logger = A.Fake<ILogger<JobDispatcher>>();
-        processor = A.Fake<IJobProcessor>();
+        downloadService = A.Fake<IDownloadService>();
+        fileSystem = A.Fake<IFileSystem>();
 
         cts = new CancellationTokenSource();
     }
@@ -42,7 +44,7 @@ public sealed class JobDispatcherTests
             MaxConcurrentDownloads = maxConcurrentDownloads,
             StopToken = cts.Token
         });
-        return new JobDispatcher(options, store, logger, processor);
+        return new JobDispatcher(options, store, logger, downloadService, fileSystem);
     }
 
     [TestMethod]
@@ -84,7 +86,7 @@ public sealed class JobDispatcherTests
         var job = A.Fake<IJob>();
 
         A.CallTo(() => store.DequeueAsync()).Returns(job);
-        A.CallTo(() => processor.ProcessAsync(job))
+        A.CallTo(() => downloadService.DownloadAsync(job.Id, job.Url, A<CancellationToken>.Ignored))
             .Invokes(() =>
             {
                 Interlocked.Increment(ref totalInvocations);
@@ -98,11 +100,13 @@ public sealed class JobDispatcherTests
                     }
                 }
             })
-            .ReturnsLazily(async (IJob _) =>
+            .ReturnsLazily(async (Guid _, string _, CancellationToken _) =>
             {
-                await Task.Delay(1, cts.Token);
+                await Task.Delay(5, cts.Token);
 
                 Interlocked.Decrement(ref concurrentInvocations);
+
+                return A.Fake<Stream>();
             });
 
         // ACT

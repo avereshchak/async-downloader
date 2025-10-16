@@ -8,7 +8,8 @@ namespace AsyncDownload.Backend.Implementation;
 internal class JobDispatcher
 {
     private readonly ILogger<JobDispatcher> logger;
-    private readonly IJobProcessor jobProcessor;
+    private readonly IDownloadService downloadService;
+    private readonly IFileSystem fileSystem;
     private readonly IJobStore store;
     private readonly SemaphoreSlim semaphore;
     private readonly CancellationToken ct;
@@ -17,7 +18,8 @@ internal class JobDispatcher
         IOptions<DownloadOptions> options,
         IJobStore store,
         ILogger<JobDispatcher> logger,
-        IJobProcessor jobProcessor)
+        IDownloadService downloadService,
+        IFileSystem fileSystem)
     {
         var maxConcurrentJobs = options.Value.MaxConcurrentDownloads;
 
@@ -32,7 +34,8 @@ internal class JobDispatcher
 
         this.store = store;
         this.logger = logger;
-        this.jobProcessor = jobProcessor;
+        this.downloadService = downloadService;
+        this.fileSystem = fileSystem;
 
         // Create a long-running task which monitors the incoming download requests
         // and spawns download tasks as needed.
@@ -59,11 +62,11 @@ internal class JobDispatcher
 
                 _ = Task.Run(() =>
                 {
-                    return InvokeJobProcessor(job)
+                    return RunJobAsync(job)
                         .ContinueWith(_ =>
                         {
                             logger.ReleasingJobSlot(job.Id, job.Url);
-                            return semaphore.Release();
+                            semaphore.Release();
                         }, ct);
                 }, ct);
             }
@@ -81,23 +84,23 @@ internal class JobDispatcher
         }
     }
 
-    private async Task InvokeJobProcessor(IJob job)
+    private async Task RunJobAsync(IJob job)
     {
         try
         {
             logger.StartingJob(job.Id, job.Url);
-            await store.StartJobAsync(job.Id);
-            
-            logger.CallingJobProcessor(job.Id, job.Url);
-            await jobProcessor.ProcessAsync(job);
+            await store.MarkAsStarted(job.Id);
 
-            await store.JobCompletedAsync(job.Id);
+            await using var stream = await downloadService.DownloadAsync(job.Id, job.Url, ct);
+            await fileSystem.SaveToFileAsync(stream, job.Id, job.FilePath, ct);
+            
+            await store.MarkAsCompletedAsync(job.Id);
             logger.JobCompleted(job.Id, job.Url);
         }
         catch (Exception ex)
         {
             logger.JobFailed(ex, job.Id, job.Url);
-            await store.JobFailedAsync(job.Id, ex.Message);
+            await store.MarkAsFailed(job.Id, ex.Message);
         }
     }
 }

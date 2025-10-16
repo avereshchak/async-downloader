@@ -46,7 +46,7 @@ internal class JobStore : IJobStore
         await jobQueue.Writer.WriteAsync(job, ct);
     }
 
-    public Task<bool> StartJobAsync(Guid jobId)
+    public Task<bool> MarkAsStarted(Guid jobId)
     {
         if (!jobs.TryGetValue(jobId, out var job))
         {
@@ -66,7 +66,7 @@ internal class JobStore : IJobStore
         return Task.FromResult(true);
     }
 
-    public Task JobCompletedAsync(Guid jobId)
+    public Task MarkAsCompletedAsync(Guid jobId)
     {
         if (jobs.TryGetValue(jobId, out var job))
         {
@@ -76,7 +76,7 @@ internal class JobStore : IJobStore
         return Task.CompletedTask;
     }
 
-    public Task JobFailedAsync(Guid jobId, string statusMessage)
+    public Task MarkAsFailed(Guid jobId, string statusMessage)
     {
         if (jobs.TryGetValue(jobId, out var job))
         {

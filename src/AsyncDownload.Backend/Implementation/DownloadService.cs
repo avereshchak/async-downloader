@@ -1,45 +1,30 @@
 ﻿using AsyncDownload.Backend.Extensions;
 using AsyncDownload.Backend.Interfaces;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace AsyncDownload.Backend.Implementation;
 
 /// <summary>
 /// A simple service for downloading given URLs to specified file paths.
 /// </summary>
-internal class DownloadService : IJobProcessor
+internal class DownloadService : IDownloadService
 {
-    private readonly CancellationToken ct;
     private readonly ILogger<DownloadService> logger;
 
-    public DownloadService(
-        IOptions<DownloadOptions> options, 
-        ILogger<DownloadService> logger)
+    public DownloadService(ILogger<DownloadService> logger)
     {
-        ct = options.Value.StopToken;
         this.logger = logger;
     }
 
-    public async Task ProcessAsync(IJob job)
+    public async Task<Stream> DownloadAsync(Guid jobId, string url, CancellationToken ct)
     {
-        logger.CreateHttpClient(job.Id, job.Url);
-        
-        // Theoretically, this service can be split into separate services.
+        logger.CreateHttpClient(jobId, url);
         using var httpClient = new HttpClient();
-        var response = await httpClient.GetAsync(job.Url, ct);
+
+        // TODO: retry policy
+        var response = await httpClient.GetAsync(url, ct);
         response.EnsureSuccessStatusCode();
 
-        logger.SaveResponseToFile(job.Id, job.FilePath);
-        
-        await using var fileStream = new FileStream(
-            job.FilePath, 
-            FileMode.Create, 
-            FileAccess.Write, 
-            FileShare.None);
-
-        await response.Content.CopyToAsync(fileStream, ct);
-
-        logger.ResponseSuccessfullyWrittenToFile(job.Id, job.FilePath);
+        return await response.Content.ReadAsStreamAsync(ct);
     }
 }

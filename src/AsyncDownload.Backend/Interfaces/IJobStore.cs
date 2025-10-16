@@ -24,14 +24,14 @@ internal interface IJobStore
     /// <summary>
     /// Changes the status of a job to InProgress.
     /// </summary>
-    Task<bool> StartJobAsync(Guid jobId);
+    Task<bool> MarkAsStarted(Guid jobId);
 
     /// <summary>
     /// Changes the status of a job to Completed.
     /// </summary>
     /// <param name="jobId"></param>
     /// <returns></returns>
-    Task JobCompletedAsync(Guid jobId);
+    Task MarkAsCompletedAsync(Guid jobId);
 
     /// <summary>
     /// Changes the status of a job to Failed with an optional status message.
@@ -39,5 +39,5 @@ internal interface IJobStore
     /// <param name="jobId"></param>
     /// <param name="statusMessage"></param>
     /// <returns></returns>
-    Task JobFailedAsync(Guid jobId, string statusMessage);
+    Task MarkAsFailed(Guid jobId, string statusMessage);
 }
